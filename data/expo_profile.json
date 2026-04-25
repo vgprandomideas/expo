@@ -1,0 +1,24 @@
+{
+  "expo_name": "India Retail Growth Expo",
+  "host_city": "Mumbai",
+  "event_dates": "17-19 July 2026",
+  "total_area_sqft": 5000,
+  "stall_area_sqft": 100,
+  "total_stalls": 50,
+  "base_stall_price_inr": 120000,
+  "organizer_margin_goal_inr": 1800000,
+  "zone_multipliers": {
+    "Diamond": 1.35,
+    "Prime": 1.15,
+    "Standard": 1.0
+  },
+  "target_industries": [
+    "Retail",
+    "FMCG",
+    "D2C",
+    "Packaging",
+    "Logistics",
+    "Consumer Electronics"
+  ]
+}
+

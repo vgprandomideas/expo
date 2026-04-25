@@ -1,0 +1,10 @@
+lead_id,company,industry,city,interested_zone,desired_stalls,status,budget_inr,next_action
+L001,Lotus Home Decor,Home Decor,Delhi,Diamond,2,Negotiation,320000,Share sponsorship bundle and frontage visuals
+L002,Nova Pack Systems,Packaging,Ahmedabad,Prime,3,Qualified,390000,Set meeting with procurement head
+L003,Urban Threads,D2C Fashion,Bengaluru,Diamond,1,Proposal Sent,180000,Follow up after rate card review
+L004,Swift Logistics,Logistics,Hyderabad,Standard,2,Qualified,220000,Offer loading bay adjacency
+L005,FreshBite Foods,FMCG,Pune,Prime,4,Negotiation,520000,Lock combo rate for 4 stalls
+L006,Pixel Gadgets,Consumer Electronics,Noida,Diamond,2,Lead In,250000,Collect booth design brief
+L007,GreenShelf Organics,FMCG,Chandigarh,Standard,1,Proposal Sent,130000,Send visitor footfall deck
+L008,Merchant Stack,Retail Tech,Gurugram,Prime,2,Qualified,260000,Pitch demo zone add-on
+

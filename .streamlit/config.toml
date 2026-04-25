@@ -1,0 +1,12 @@
+[global]
+developmentMode = false
+
+[theme]
+primaryColor = "#D96C06"
+backgroundColor = "#F4F0E8"
+secondaryBackgroundColor = "#FFF9F0"
+textColor = "#1F2328"
+font = "sans serif"
+
+[server]
+headless = true
