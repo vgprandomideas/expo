@@ -223,8 +223,9 @@ def inject_styles() -> None:
             letter-spacing: -0.02em;
         }
         .hero-panel {
-            display: flex;
-            justify-content: space-between;
+            display: grid;
+            grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.95fr);
+            align-items: start;
             gap: 1.25rem;
             padding: 1.6rem 1.8rem;
             border-radius: 22px;
@@ -235,13 +236,14 @@ def inject_styles() -> None:
             margin-bottom: 1.1rem;
         }
         .hero-copy {
-            flex: 1 1 0;
             min-width: 0;
+            max-width: 780px;
         }
         .hero-panel h1 {
             margin: 0 0 0.55rem;
-            font-size: clamp(2rem, 4vw, 3.15rem);
-            line-height: 1.04;
+            font-size: clamp(2rem, 3.1vw, 3.15rem);
+            line-height: 1.02;
+            text-wrap: balance;
         }
         .hero-panel p {
             margin: 0;
@@ -257,7 +259,8 @@ def inject_styles() -> None:
             margin-bottom: 0.7rem;
         }
         .hero-stat {
-            min-width: 210px;
+            width: 100%;
+            min-width: 0;
             padding: 1rem 1.1rem;
             border-radius: 18px;
             background: rgba(255, 255, 255, 0.08);
@@ -374,20 +377,11 @@ def inject_styles() -> None:
                 padding-right: 1rem;
             }
             .hero-panel {
-                flex-direction: column;
+                grid-template-columns: 1fr;
                 padding: 1.2rem 1.15rem;
             }
             .hero-stat {
-                width: 100%;
-                min-width: 0;
-            }
-            .main .block-container [data-testid="stHorizontalBlock"] {
-                flex-direction: column;
-                gap: 0.85rem;
-            }
-            .main .block-container [data-testid="stHorizontalBlock"] > [data-testid="column"] {
-                width: 100% !important;
-                flex: 1 1 100% !important;
+                max-width: none;
             }
             [data-baseweb="tab-list"] {
                 gap: 0.35rem;
@@ -406,6 +400,16 @@ def inject_styles() -> None:
             .stall-grid {
                 grid-template-columns: repeat(3, minmax(0, 1fr));
                 gap: 0.6rem;
+            }
+        }
+        @media (max-width: 760px) {
+            .main .block-container [data-testid="stHorizontalBlock"] {
+                flex-direction: column;
+                gap: 0.85rem;
+            }
+            .main .block-container [data-testid="stHorizontalBlock"] > [data-testid="column"] {
+                width: 100% !important;
+                flex: 1 1 100% !important;
             }
         }
         @media (max-width: 640px) {
