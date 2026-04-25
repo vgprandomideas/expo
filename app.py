@@ -214,6 +214,10 @@ def inject_styles() -> None:
                 radial-gradient(circle at top right, rgba(217, 164, 4, 0.12), transparent 24%),
                 linear-gradient(180deg, #f6efe3 0%, #efe5d6 100%);
         }
+        .main .block-container {
+            padding-top: 1.5rem;
+            padding-bottom: 2rem;
+        }
         h1, h2, h3 {
             font-family: Georgia, serif;
             letter-spacing: -0.02em;
@@ -230,9 +234,21 @@ def inject_styles() -> None:
             box-shadow: 0 20px 45px rgba(31, 35, 40, 0.15);
             margin-bottom: 1.1rem;
         }
+        .hero-copy {
+            flex: 1 1 0;
+            min-width: 0;
+        }
+        .hero-panel h1 {
+            margin: 0 0 0.55rem;
+            font-size: clamp(2rem, 4vw, 3.15rem);
+            line-height: 1.04;
+        }
         .hero-panel p {
             margin: 0;
             color: rgba(249, 245, 239, 0.84);
+        }
+        .hero-panel p + p {
+            margin-top: 0.55rem;
         }
         .eyebrow {
             text-transform: uppercase;
@@ -334,6 +350,15 @@ def inject_styles() -> None:
             border-radius: 999px;
             font-size: 0.8rem;
         }
+        .legend-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            margin-bottom: 0.35rem;
+        }
+        .legend-row .legend-chip {
+            margin-right: 0;
+        }
         .legend-booked {
             background: rgba(194, 77, 44, 0.15);
         }
@@ -342,6 +367,85 @@ def inject_styles() -> None:
         }
         .legend-available {
             background: rgba(46, 139, 87, 0.15);
+        }
+        @media (max-width: 900px) {
+            .main .block-container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+            .hero-panel {
+                flex-direction: column;
+                padding: 1.2rem 1.15rem;
+            }
+            .hero-stat {
+                width: 100%;
+                min-width: 0;
+            }
+            .main .block-container [data-testid="stHorizontalBlock"] {
+                flex-direction: column;
+                gap: 0.85rem;
+            }
+            .main .block-container [data-testid="stHorizontalBlock"] > [data-testid="column"] {
+                width: 100% !important;
+                flex: 1 1 100% !important;
+            }
+            [data-baseweb="tab-list"] {
+                gap: 0.35rem;
+                overflow-x: auto;
+                scrollbar-width: none;
+                padding-bottom: 0.2rem;
+            }
+            [data-baseweb="tab-list"]::-webkit-scrollbar {
+                display: none;
+            }
+            button[role="tab"] {
+                white-space: nowrap;
+                padding-left: 0.85rem;
+                padding-right: 0.85rem;
+            }
+            .stall-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+                gap: 0.6rem;
+            }
+        }
+        @media (max-width: 640px) {
+            .main .block-container {
+                padding-top: 1rem;
+                padding-left: 0.9rem;
+                padding-right: 0.9rem;
+            }
+            .hero-panel h1 {
+                font-size: 1.85rem;
+            }
+            .hero-panel p {
+                font-size: 0.95rem;
+            }
+            .metric-card {
+                padding: 0.9rem;
+            }
+            .metric-card strong {
+                font-size: 1.35rem;
+            }
+            .panel-shell {
+                padding: 0.95rem;
+            }
+            .stall-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+            .stall-card {
+                min-height: 96px;
+                padding: 0.7rem;
+            }
+            .stall-id {
+                font-size: 0.95rem;
+            }
+            .stall-zone {
+                font-size: 0.72rem;
+            }
+            .stall-client {
+                font-size: 0.8rem;
+                line-height: 1.25;
+            }
         }
         </style>
         """,
@@ -410,7 +514,7 @@ def main() -> None:
     st.markdown(
         f"""
         <div class="hero-panel">
-            <div>
+            <div class="hero-copy">
                 <p class="eyebrow">Expo Space Selling Desk</p>
                 <h1>{profile["expo_name"]}</h1>
                 <p>Convert one large offline exhibition allocation into a tightly managed online stall-selling operation.</p>
@@ -535,9 +639,11 @@ def main() -> None:
             st.subheader("50-stall expo layout")
             st.markdown(
                 """
-                <span class="legend-chip legend-booked">Booked</span>
-                <span class="legend-chip legend-reserved">Reserved</span>
-                <span class="legend-chip legend-available">Available</span>
+                <div class="legend-row">
+                    <span class="legend-chip legend-booked">Booked</span>
+                    <span class="legend-chip legend-reserved">Reserved</span>
+                    <span class="legend-chip legend-available">Available</span>
+                </div>
                 """,
                 unsafe_allow_html=True,
             )
