@@ -1,6 +1,6 @@
 # Expo Space Marketplace
 
-Streamlit sales cockpit for operators who buy bulk exhibition area and resell it as smaller branded stalls.
+Streamlit operating system for expo operators who buy bulk exhibition area and resell it as smaller branded stalls.
 
 This demo is built around a simple operating model:
 
@@ -11,11 +11,13 @@ This demo is built around a simple operating model:
 
 ## What the app includes
 
-- Executive dashboard for occupancy, confirmed sales, and hot pipeline.
-- Visual expo map with `50` stalls and color-coded availability.
-- Lead pipeline with example companies from across India.
+- Login screen with username and password authentication.
+- Admin controls for creating users, resetting passwords, and role management.
+- Multi-expo setup so you can create and manage more than one expo space.
+- Expo master controls for adjusting total stalls, stall size, pricing, services, and venue details.
+- Visual expo map with editable stall details, pricing, contact fields, and booking status.
+- Lead pipeline with manual lead creation and automatic lead updates from stall bookings.
 - Revenue engine for testing price, upsell, and margin scenarios.
-- Booking form in the sidebar to reserve or close stalls during a client call.
 
 ## Project structure
 
@@ -29,6 +31,15 @@ expo-space-marketplace/
 |-- requirements.txt
 `-- README.md
 ```
+
+## First login
+
+On first run the app seeds a default admin account:
+
+- Username: `admin`
+- Password: `ExpoAdmin@123`
+
+Change the password from the sidebar after signing in.
 
 ## Run locally
 
