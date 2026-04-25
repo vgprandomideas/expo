@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from textwrap import dedent
 
 import pandas as pd
 import streamlit as st
@@ -148,20 +149,18 @@ def render_stall_grid(stalls: pd.DataFrame, selected_stall: str) -> str:
         status_class = stall["status"].lower()
         selected_class = " selected" if stall["stall_id"] == selected_stall else ""
         cards.append(
-            f"""
-            <div class="stall-card {status_class}{selected_class}">
-                <span class="stall-id">{stall["stall_id"]}</span>
-                <span class="stall-zone">{stall["zone"]}</span>
-                <span class="stall-client">{stall["client"]}</span>
-            </div>
-            """
+            dedent(
+                f"""
+                <div class="stall-card {status_class}{selected_class}">
+                    <span class="stall-id">{stall["stall_id"]}</span>
+                    <span class="stall-zone">{stall["zone"]}</span>
+                    <span class="stall-client">{stall["client"]}</span>
+                </div>
+                """
+            ).strip()
         )
 
-    return f"""
-    <div class="stall-grid">
-        {''.join(cards)}
-    </div>
-    """
+    return f'<div class="stall-grid">{"".join(cards)}</div>'
 
 
 def add_booking(
