@@ -276,21 +276,28 @@ def inject_styles() -> None:
             background: rgba(255, 249, 240, 0.88);
             border: 1px solid rgba(31, 35, 40, 0.08);
         }
+        [data-testid="column"] {
+            min-width: 0;
+        }
         .stall-grid {
             display: grid;
-            grid-template-columns: repeat(5, minmax(120px, 1fr));
-            gap: 0.8rem;
+            width: 100%;
+            grid-template-columns: repeat(auto-fit, minmax(104px, 1fr));
+            gap: 0.75rem;
+            align-items: stretch;
         }
         .stall-card {
-            min-height: 108px;
+            min-width: 0;
+            min-height: 104px;
             border-radius: 16px;
-            padding: 0.85rem;
+            padding: 0.8rem;
             border: 1px solid transparent;
             color: #1f2328;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+            overflow: hidden;
         }
         .stall-card.available {
             background: linear-gradient(180deg, #dff5e8 0%, #bfe7cd 100%);
@@ -310,13 +317,15 @@ def inject_styles() -> None:
             font-size: 1rem;
         }
         .stall-zone {
-            font-size: 0.82rem;
+            font-size: 0.78rem;
             text-transform: uppercase;
             letter-spacing: 0.08em;
         }
         .stall-client {
-            font-size: 0.88rem;
+            font-size: 0.85rem;
+            line-height: 1.35;
             color: rgba(31, 35, 40, 0.82);
+            overflow-wrap: anywhere;
         }
         .legend-chip {
             display: inline-block;
@@ -521,7 +530,7 @@ def main() -> None:
         st.bar_chart(booked_categories)
 
     with layout_tab:
-        expo_left, expo_right = st.columns([1.7, 1])
+        expo_left, expo_right = st.columns([1.95, 1], gap="large")
         with expo_left:
             st.subheader("50-stall expo layout")
             st.markdown(
