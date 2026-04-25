@@ -728,10 +728,20 @@ def inject_styles() -> None:
     st.markdown(
         """
         <style>
+        :root {
+            --page-bg-top: #f6f8fb;
+            --page-bg-bottom: #e8eef5;
+            --surface: rgba(248, 250, 252, 0.96);
+            --surface-muted: rgba(237, 242, 247, 0.92);
+            --ink: #18212b;
+            --ink-soft: #5d6977;
+            --accent: #c76b1b;
+        }
         .stApp {
             background:
-                radial-gradient(circle at top right, rgba(217, 164, 4, 0.12), transparent 24%),
-                linear-gradient(180deg, #f6efe3 0%, #efe5d6 100%);
+                radial-gradient(circle at top left, rgba(199, 107, 27, 0.10), transparent 22%),
+                radial-gradient(circle at 85% 12%, rgba(24, 33, 43, 0.08), transparent 24%),
+                linear-gradient(180deg, var(--page-bg-top) 0%, var(--page-bg-bottom) 100%);
         }
         .main .block-container {
             padding-top: 1.4rem;
@@ -792,9 +802,10 @@ def inject_styles() -> None:
         }
         .metric-card, .panel-shell, .soft-card {
             border-radius: 18px;
-            background: rgba(255, 249, 240, 0.95);
+            background: var(--surface);
             border: 1px solid rgba(31, 35, 40, 0.08);
             box-shadow: 0 10px 30px rgba(31, 35, 40, 0.06);
+            color: var(--ink);
         }
         .metric-card {
             padding: 1rem 1.05rem;
@@ -804,7 +815,7 @@ def inject_styles() -> None:
             font-size: 0.82rem;
             text-transform: uppercase;
             letter-spacing: 0.08em;
-            color: #7a6753;
+            color: var(--ink-soft);
         }
         .metric-card strong {
             display: block;
@@ -816,6 +827,10 @@ def inject_styles() -> None:
         }
         .soft-card h4 {
             margin: 0 0 0.55rem;
+            color: var(--ink);
+        }
+        .soft-card p {
+            color: var(--ink-soft);
         }
         [data-testid="column"] {
             min-width: 0;
@@ -879,12 +894,13 @@ def inject_styles() -> None:
             padding: 0.3rem 0.6rem;
             border-radius: 999px;
             font-size: 0.8rem;
+            color: var(--ink);
         }
         .legend-booked {
-            background: rgba(194, 77, 44, 0.15);
+            background: rgba(194, 77, 44, 0.14);
         }
         .legend-reserved {
-            background: rgba(217, 164, 4, 0.18);
+            background: rgba(199, 107, 27, 0.18);
         }
         .legend-available {
             background: rgba(46, 139, 87, 0.15);
@@ -892,7 +908,7 @@ def inject_styles() -> None:
         .login-shell {
             padding: 1.6rem;
             border-radius: 24px;
-            background: linear-gradient(135deg, #20252d 0%, #3b414b 100%);
+            background: linear-gradient(135deg, #1c2430 0%, #364150 100%);
             color: #fff5e8;
             border: 1px solid rgba(255, 255, 255, 0.08);
             box-shadow: 0 20px 45px rgba(31, 35, 40, 0.15);
@@ -903,6 +919,18 @@ def inject_styles() -> None:
         }
         .login-shell p {
             color: rgba(255, 245, 232, 0.86);
+        }
+        .login-shell .soft-card {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: none;
+            color: #fff5e8;
+        }
+        .login-shell .soft-card h4 {
+            color: #fff5e8;
+        }
+        .login-shell .soft-card p {
+            color: rgba(255, 245, 232, 0.78);
         }
         .mini-grid {
             display: grid;
