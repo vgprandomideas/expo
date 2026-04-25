@@ -711,10 +711,19 @@ def create_expo(
     return expo
 
 
-def create_user(app_data: dict, username: str, full_name: str, password: str, role: str) -> None:
+def create_user(
+    app_data: dict,
+    username: str,
+    full_name: str,
+    password: str,
+    role: str,
+    active: bool = True,
+) -> dict:
     if get_user(app_data, username):
         raise ValueError("That username already exists.")
-    app_data["users"].append(make_user_record(username, full_name, password, role=role))
+    user_record = make_user_record(username, full_name, password, role=role, active=active)
+    app_data["users"].append(user_record)
+    return user_record
 
 
 def update_user_password(user: dict, new_password: str) -> None:
@@ -1070,8 +1079,7 @@ def build_revenue_scenarios(
 
 
 def render_login_page(app_data: dict) -> None:
-    default_creds = app_data["meta"]["default_credentials"]
-    left_col, right_col = st.columns([1.15, 0.85], gap="large")
+    left_col, login_col, register_col = st.columns([1.15, 0.75, 0.85], gap="large")
     with left_col:
         st.markdown(
             """
@@ -1081,23 +1089,21 @@ def render_login_page(app_data: dict) -> None:
                 <p>Manage logins, admin approvals, expo creation, stall inventory, live pipeline, pricing, and bookings from one Streamlit workspace.</p>
                 <div class="mini-grid">
                     <div class="soft-card">
-                        <h4>Admin controls</h4>
-                        <p>Create users, reset passwords, build new expo spaces, and adjust layouts and pricing.</p>
+                        <h4>Regular user path</h4>
+                        <p>Regular users get the day-to-day sales path: stall map, bookings, and lead pipeline.</p>
                     </div>
                     <div class="soft-card">
-                        <h4>Working inventory</h4>
-                        <p>Edit stall details, reserve or book spaces, and manage more than one expo from the same app.</p>
+                        <h4>Admin path</h4>
+                        <p>Admins see everything, including user controls, expo creation, pricing setup, and full inventory management.</p>
                     </div>
                 </div>
             </div>
             """,
             unsafe_allow_html=True,
         )
-    with right_col:
+    with login_col:
         st.subheader("Login")
-        st.info(
-            f"Default admin for first run: username `{default_creds['username']}` and password `{default_creds['password']}`. Change it after login."
-        )
+        st.caption("Sign in with your existing account. Regular users will see only their working path. Admins see the full system.")
         with st.form("login_form", clear_on_submit=False):
             username = st.text_input("Username")
             password = st.text_input("Password", type="password")
@@ -1110,6 +1116,53 @@ def render_login_page(app_data: dict) -> None:
                 st.rerun()
             st.error("Invalid username or password.")
 
+    with register_col:
+        st.subheader("Register")
+        st.caption("Create a regular account instantly, or create an admin account that stays inactive until an admin approves it.")
+        with st.form("register_form", clear_on_submit=True):
+            full_name = st.text_input("Full name")
+            username = st.text_input("Create username")
+            password = st.text_input("Create password", type="password")
+            confirm_password = st.text_input("Confirm password", type="password")
+            account_type = st.selectbox("Account type", options=["Regular user", "Admin user"])
+            register_button = st.form_submit_button("Create account", use_container_width=True)
+
+        if register_button:
+            normalized_username = username.strip().lower()
+            if not full_name.strip() or not normalized_username or not password:
+                st.error("Full name, username, and password are required.")
+            elif len(password) < 8:
+                st.error("Password should be at least 8 characters.")
+            elif password != confirm_password:
+                st.error("Passwords do not match.")
+            else:
+                try:
+                    if account_type == "Admin user":
+                        create_user(
+                            app_data,
+                            normalized_username,
+                            full_name,
+                            password,
+                            role="admin",
+                            active=False,
+                        )
+                        write_app_data(app_data)
+                        st.success("Admin account created. It will stay inactive until an existing admin approves it.")
+                    else:
+                        new_user = create_user(
+                            app_data,
+                            normalized_username,
+                            full_name,
+                            password,
+                            role="sales",
+                            active=True,
+                        )
+                        write_app_data(app_data)
+                        st.session_state.auth_username = new_user["username"]
+                        st.rerun()
+                except ValueError as exc:
+                    st.error(str(exc))
+
 
 def render_sidebar(
     app_data: dict,
@@ -1118,7 +1171,8 @@ def render_sidebar(
     stalls_df: pd.DataFrame,
 ) -> tuple[list[str], list[str], str]:
     st.sidebar.header("Control Tower")
-    st.sidebar.caption(f"{current_user['full_name']} | {current_user['role'].title()}")
+    workspace_label = "Admin workspace" if current_user["role"] == "admin" else "Regular workspace"
+    st.sidebar.caption(f"{current_user['full_name']} | {workspace_label}")
     if st.sidebar.button("Logout", use_container_width=True):
         st.session_state.pop("auth_username", None)
         st.rerun()
@@ -1693,6 +1747,13 @@ def render_admin_control(app_data: dict) -> None:
                     "full_name": user["full_name"],
                     "role": user["role"],
                     "active": user["active"],
+                    "access_state": (
+                        "Pending admin activation"
+                        if user["role"] == "admin" and not user["active"]
+                        else "Active"
+                        if user["active"]
+                        else "Inactive"
+                    ),
                     "updated_at": user.get("updated_at", ""),
                 }
                 for user in app_data["users"]
@@ -1787,9 +1848,17 @@ def main() -> None:
     render_hero(expo, metrics)
     render_metric_cards(metrics)
 
-    tab_labels = ["Sales Command", "Expo Map", "Lead Pipeline", "Revenue Engine"]
     if current_user["role"] == "admin":
-        tab_labels.extend(["Expo Setup", "Admin Control"])
+        tab_labels = [
+            "Sales Command",
+            "Expo Map",
+            "Lead Pipeline",
+            "Revenue Engine",
+            "Expo Setup",
+            "Admin Control",
+        ]
+    else:
+        tab_labels = ["Sales Command", "Expo Map", "Lead Pipeline"]
     tabs = st.tabs(tab_labels)
 
     with tabs[0]:
@@ -1801,10 +1870,9 @@ def main() -> None:
     with tabs[2]:
         render_lead_pipeline(app_data, expo, leads_df, current_user)
 
-    with tabs[3]:
-        render_revenue_engine(expo)
-
     if current_user["role"] == "admin":
+        with tabs[3]:
+            render_revenue_engine(expo)
         with tabs[4]:
             render_expo_setup(app_data, expo, current_user)
         with tabs[5]:
