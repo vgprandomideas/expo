@@ -453,19 +453,25 @@ def calculate_metrics(stalls: pd.DataFrame) -> dict:
     }
 
 
-def render_stall_grid(stalls: pd.DataFrame, selected_stall: str) -> str:
+def render_stall_grid(stalls: pd.DataFrame, selected_stall: str, reveal_client: bool = True) -> str:
     ordered_stalls = stalls.sort_values(by=["row", "column"])
     cards: list[str] = []
     for _, stall in ordered_stalls.iterrows():
         status_class = stall["status"].lower()
         selected_class = " selected" if stall["stall_id"] == selected_stall else ""
+        if reveal_client:
+            stall_label = stall["client"]
+        elif stall["status"] == "Available":
+            stall_label = "Open for enquiry"
+        else:
+            stall_label = stall["status"]
         cards.append(
             dedent(
                 f"""
                 <div class="stall-card {status_class}{selected_class}">
                     <span class="stall-id">{stall["stall_id"]}</span>
                     <span class="stall-zone">{stall["zone"]}</span>
-                    <span class="stall-client">{stall["client"]}</span>
+                    <span class="stall-client">{stall_label}</span>
                 </div>
                 """
             ).strip()
@@ -1079,22 +1085,59 @@ def build_revenue_scenarios(
 
 
 def render_login_page(app_data: dict) -> None:
+    expo_lookup = {expo["expo_id"]: expo for expo in app_data.get("expos", [])}
+    expo_ids = list(expo_lookup)
+    selected_public_expo_id = None
+    selected_public_expo = None
+    public_stalls_df = pd.DataFrame(columns=STALL_COLUMNS)
+    public_metrics = {"available": 0, "reserved": 0, "booked": 0, "occupancy": 0}
+
+    st.caption("Browse the basic expo view without an account. Login or register only when you want to reserve space, capture leads, or manage inventory.")
+
+    if expo_ids:
+        stored_public_expo_id = st.session_state.get("public_expo_select", expo_ids[0])
+        if stored_public_expo_id not in expo_lookup:
+            stored_public_expo_id = expo_ids[0]
+        selected_public_expo_id = st.selectbox(
+            "Browse expo",
+            options=expo_ids,
+            index=expo_ids.index(stored_public_expo_id),
+            key="public_expo_select",
+            format_func=lambda expo_id: f"{expo_lookup[expo_id]['expo_name']} | {expo_lookup[expo_id]['host_city']}",
+        )
+        selected_public_expo = expo_lookup[selected_public_expo_id]
+        public_stalls_df = stalls_df_from_expo(selected_public_expo)
+        public_metrics = calculate_metrics(public_stalls_df)
+
     left_col, login_col, register_col = st.columns([1.15, 0.75, 0.85], gap="large")
     with left_col:
+        heading = selected_public_expo["expo_name"] if selected_public_expo else "Expo Space Marketplace"
+        detail_line = (
+            f"{selected_public_expo['host_city']} | {selected_public_expo['venue_name']} | {selected_public_expo['event_dates']}"
+            if selected_public_expo
+            else "Public expo browsing opens here before login."
+        )
+        inventory_line = (
+            f"{selected_public_expo['total_area_sqft']:,} sq ft total area | {selected_public_expo['total_stalls']} stalls | {public_metrics['available']} currently open"
+            if selected_public_expo
+            else "Preview inventory, then log in only when you need to act."
+        )
         st.markdown(
-            """
+            f"""
             <div class="login-shell">
-                <p class="eyebrow">Expo Operating System</p>
-                <h1>Run offline expo inventory with real controls.</h1>
-                <p>Manage logins, admin approvals, expo creation, stall inventory, live pipeline, pricing, and bookings from one Streamlit workspace.</p>
+                <p class="eyebrow">Public Expo Preview</p>
+                <h1>{heading}</h1>
+                <p>Browse the minimum expo details without creating an account. Use login or registration only when you want to reserve stalls, raise leads, or manage operations.</p>
+                <p>{detail_line}</p>
+                <p>{inventory_line}</p>
                 <div class="mini-grid">
                     <div class="soft-card">
-                        <h4>Regular user path</h4>
-                        <p>Regular users get the day-to-day sales path: stall map, bookings, and lead pipeline.</p>
+                        <h4>Guest view</h4>
+                        <p>Guests can see public availability, the expo layout, stall zones, and a limited stall preview.</p>
                     </div>
                     <div class="soft-card">
-                        <h4>Admin path</h4>
-                        <p>Admins see everything, including user controls, expo creation, pricing setup, and full inventory management.</p>
+                        <h4>Action unlock</h4>
+                        <p>Login or register to see pricing, client details, lead workflow, booking controls, and admin tools based on your role.</p>
                     </div>
                 </div>
             </div>
@@ -1103,7 +1146,7 @@ def render_login_page(app_data: dict) -> None:
         )
     with login_col:
         st.subheader("Login")
-        st.caption("Sign in with your existing account. Regular users will see only their working path. Admins see the full system.")
+        st.caption("Existing users can sign in only when they need to work inside the system. Regular users see their sales path. Admins see the full console.")
         with st.form("login_form", clear_on_submit=False):
             username = st.text_input("Username")
             password = st.text_input("Password", type="password")
@@ -1118,7 +1161,7 @@ def render_login_page(app_data: dict) -> None:
 
     with register_col:
         st.subheader("Register")
-        st.caption("Create a regular account instantly, or create an admin account that stays inactive until an admin approves it.")
+        st.caption("Create an account only when you want to act. Regular users get immediate sales access. Admin users stay pending until an existing admin approves them.")
         with st.form("register_form", clear_on_submit=True):
             full_name = st.text_input("Full name")
             username = st.text_input("Create username")
@@ -1162,6 +1205,11 @@ def render_login_page(app_data: dict) -> None:
                         st.rerun()
                 except ValueError as exc:
                     st.error(str(exc))
+
+    if selected_public_expo is not None:
+        st.markdown("### Public expo summary")
+        render_public_metric_cards(public_metrics)
+        render_public_preview(selected_public_expo, public_stalls_df)
 
 
 def render_sidebar(
@@ -1310,6 +1358,122 @@ def render_metric_cards(metrics: dict) -> None:
             """,
             unsafe_allow_html=True,
         )
+
+
+def render_public_metric_cards(metrics: dict) -> None:
+    metric_columns = st.columns(4)
+    metric_payload = [
+        ("Open stalls", str(metrics["available"])),
+        ("Reserved", str(metrics["reserved"])),
+        ("Booked", str(metrics["booked"])),
+        ("Occupancy", f'{metrics["occupancy"]:.0f}%'),
+    ]
+    for column, (label, value) in zip(metric_columns, metric_payload):
+        column.markdown(
+            f"""
+            <div class="metric-card">
+                <span>{label}</span>
+                <strong>{value}</strong>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+
+def render_public_preview(expo: dict, stalls_df: pd.DataFrame) -> None:
+    if stalls_df.empty:
+        st.info("No stall inventory has been created for this expo yet.")
+        return
+
+    overview_left, overview_right = st.columns([1.15, 0.85], gap="large")
+    status_summary = (
+        stalls_df.groupby("status")["stall_id"]
+        .count()
+        .reindex(STATUS_ORDER, fill_value=0)
+        .rename("stall_count")
+    )
+    zone_summary = (
+        stalls_df.groupby(["zone", "status"])["stall_id"]
+        .count()
+        .unstack(fill_value=0)
+        .reindex(index=["Diamond", "Prime", "Standard"], fill_value=0)
+        .reindex(columns=STATUS_ORDER, fill_value=0)
+    )
+
+    with overview_left:
+        st.subheader("Availability snapshot")
+        st.bar_chart(status_summary)
+
+    with overview_right:
+        st.subheader("Zone mix")
+        st.dataframe(zone_summary, use_container_width=True)
+        st.markdown(
+            """
+            <div class="soft-card">
+                <h4>Guest view only shows the basics</h4>
+                <p>Browse stall status, zone mix, and the public layout here. Login or register when you want pricing, client details, lead handling, or booking controls.</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+    stall_options = stalls_df["stall_id"].tolist()
+    selected_stall = st.selectbox(
+        "Preview a stall",
+        options=stall_options,
+        key=f"public_focus_stall_{expo['expo_id']}",
+    )
+    stall_details = stalls_df.set_index("stall_id").loc[selected_stall]
+
+    map_left, map_right = st.columns([1.95, 1], gap="large")
+    with map_left:
+        st.subheader(f"{expo['total_stalls']}-stall public layout")
+        st.markdown(
+            """
+            <div class="legend-row">
+                <span class="legend-chip legend-booked">Booked</span>
+                <span class="legend-chip legend-reserved">Reserved</span>
+                <span class="legend-chip legend-available">Available</span>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        st.markdown(
+            render_stall_grid(stalls_df, selected_stall, reveal_client=False),
+            unsafe_allow_html=True,
+        )
+
+    with map_right:
+        st.subheader(f"Stall {selected_stall}")
+        if stall_details["status"] == "Available":
+            availability_note = "Open for enquiry"
+        elif stall_details["status"] == "Reserved":
+            availability_note = "Commercial details unlock after login"
+        else:
+            availability_note = "This stall is no longer open"
+        st.markdown(
+            f"""
+            <div class="panel-shell">
+                <p><strong>Status:</strong> {stall_details['status']}</p>
+                <p><strong>Zone:</strong> {stall_details['zone']}</p>
+                <p><strong>Area:</strong> {stall_details['area_sqft']:,} sq ft</p>
+                <p><strong>Footfall score:</strong> {stall_details['footfall_score']}/100</p>
+                <p><strong>Public note:</strong> {availability_note}</p>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+        same_zone_options = stalls_df[
+            (stalls_df["zone"] == stall_details["zone"]) & (stalls_df["status"] == "Available")
+        ][["stall_id", "footfall_score"]].head(5)
+        st.subheader("Open options in the same zone")
+        if same_zone_options.empty:
+            st.info("No open stalls remain in this zone.")
+        else:
+            st.dataframe(same_zone_options, use_container_width=True, hide_index=True)
+
+        st.info("Sign in or register when you want pricing, full stall details, lead capture, or booking controls.")
 
 
 def render_sales_command(stalls_df: pd.DataFrame, filtered_stalls: pd.DataFrame) -> None:
